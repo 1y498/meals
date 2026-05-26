@@ -90,6 +90,11 @@ body {
 .history-day { margin-bottom: 0.3rem; }
 .history-date { color: #c0392b; font-weight: 600; }
 
+/* QR Code */
+.qr-section { text-align: center; margin-top: 1.5rem; padding: 1rem; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.qr-section img { width: 140px; height: 140px; display: block; margin: 0.5rem auto; }
+.qr-section .qr-hint { font-size: 0.78rem; color: #999; }
+
 /* Warning */
 .warning-box {
   margin-top: 1rem; padding: 0.6rem 0.8rem; background: #fff8e1;
@@ -143,6 +148,13 @@ body {
 
   <!-- 历史记录 -->
   <div class="history-section" id="historySection"></div>
+
+  <!-- 二维码 -->
+  <div class="qr-section">
+    <div style="font-size:0.9rem;font-weight:600;color:#333;">📱 扫码打开</div>
+    <img src="qrcode.png" alt="二维码" width="140" height="140">
+    <div class="qr-hint">手机扫描二维码，直接打开本页面</div>
+  </div>
 
 </div>
 
