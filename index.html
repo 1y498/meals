@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>今天吃什么 — 长沙家常菜</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #f5f0e8;
+  color: #333;
+  min-height: 100vh;
+  padding-bottom: 2rem;
+}
+.header {
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  color: #fff;
+  text-align: center;
+  padding: 1.5rem 1rem 1.2rem;
+}
+.header h1 { font-size: 1.6rem; font-weight: 700; }
+.header p { font-size: 0.85rem; opacity: 0.85; margin-top: 0.3rem; }
+.container { max-width: 480px; margin: 0 auto; padding: 0 1rem; }
+
+/* Meal Card */
+.meal-section { margin-top: 1.2rem; }
+.meal-title {
+  font-size: 1.1rem; font-weight: 700; color: #c0392b;
+  display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.5rem;
+}
+.card {
+  background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+.dish-row {
+  display: flex; align-items: center; padding: 0.7rem 1rem; gap: 0.6rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+.dish-row:last-child { border-bottom: none; }
+.dish-icon { font-size: 1.3rem; flex-shrink: 0; }
+.dish-info { flex: 1; min-width: 0; }
+.dish-name { font-size: 0.95rem; font-weight: 600; }
+.dish-tags { display: flex; gap: 0.3rem; margin-top: 0.15rem; flex-wrap: wrap; }
+.tag {
+  font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px;
+  background: #fef3e2; color: #c07830; white-space: nowrap;
+}
+.tag.protein { background: #e8f0fe; color: #3060c0; }
+.tag.method { background: #f0f0f0; color: #666; }
+
+/* Recipe */
+.recipe-toggle {
+  display: block; width: 100%; padding: 0.6rem; text-align: center;
+  font-size: 0.82rem; color: #c0392b; background: #fdf2f2;
+  border: none; cursor: pointer; transition: background 0.2s;
+}
+.recipe-toggle:active { background: #f8d7da; }
+.recipe-body { display: none; padding: 0.8rem 1rem 1rem; background: #fafaf7; }
+.recipe-body.open { display: block; }
+.recipe-steps { font-size: 0.84rem; color: #555; line-height: 1.7; white-space: pre-line; }
+.recipe-label { font-size: 0.78rem; color: #999; margin-bottom: 0.3rem; }
+.dish-row:first-child .recipe-label { margin-top: 0; }
+
+/* Buttons */
+.btn-row { display: flex; gap: 0.6rem; margin-top: 0.6rem; }
+.btn {
+  flex: 1; padding: 0.7rem; text-align: center; border-radius: 8px;
+  font-size: 0.9rem; font-weight: 600; border: none; cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.btn:active { transform: scale(0.97); }
+.btn-draw {
+  background: linear-gradient(135deg, #c0392b, #e74c3c); color: #fff;
+  box-shadow: 0 2px 6px rgba(192,57,43,0.3);
+}
+.btn-reset { background: #fff; color: #c0392b; border: 1.5px solid #c0392b; }
+.btn-copy {
+  display: block; width: 100%; margin-top: 0.8rem;
+  background: #2e7d32; color: #fff; padding: 0.7rem; border-radius: 8px;
+  border: none; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+}
+.btn-copy:active { transform: scale(0.97); }
+
+/* History */
+.history-section { margin-top: 1.5rem; }
+.history-title { font-size: 0.9rem; color: #999; font-weight: 600; margin-bottom: 0.4rem; }
+.history-list { font-size: 0.78rem; color: #888; line-height: 1.6; }
+.history-day { margin-bottom: 0.3rem; }
+.history-date { color: #c0392b; font-weight: 600; }
+
+/* Warning */
+.warning-box {
+  margin-top: 1rem; padding: 0.6rem 0.8rem; background: #fff8e1;
+  border-left: 3px solid #ffa000; border-radius: 4px;
+  font-size: 0.78rem; color: #8d6e00;
+}
+
+/* Empty state */
+.empty-state { text-align: center; padding: 2rem 1rem; color: #bbb; }
+.empty-state .icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>今天吃什么</h1>
+  <p>长沙家常菜 · 每日随机抽取</p>
+</div>
+
+<div class="container">
+
+  <!-- 午餐 -->
+  <div class="meal-section" id="lunchSection">
+    <div class="meal-title">🥢 午餐</div>
+    <div class="card" id="lunchCard">
+      <div class="empty-state" id="lunchEmpty"><span class="icon">🎲</span>点击下方按钮抽取午餐菜单</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-draw" onclick="drawMeal('lunch')">🎲 抽取午餐</button>
+      <button class="btn btn-reset" onclick="drawMeal('lunch')">🔄 换一换</button>
+    </div>
+  </div>
+
+  <!-- 晚餐 -->
+  <div class="meal-section" id="dinnerSection">
+    <div class="meal-title">🌙 晚餐</div>
+    <div class="card" id="dinnerCard">
+      <div class="empty-state" id="dinnerEmpty"><span class="icon">🎲</span>点击下方按钮抽取晚餐菜单</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-draw" onclick="drawMeal('dinner')">🎲 抽取晚餐</button>
+      <button class="btn btn-reset" onclick="drawMeal('dinner')">🔄 换一换</button>
+    </div>
+  </div>
+
+  <!-- 复制菜单 -->
+  <button class="btn-copy" onclick="copyMenu()">📋 复制今日菜单到剪贴板</button>
+
+  <!-- 避雷提示 -->
+  <div class="warning-box" id="warningBox"></div>
+
+  <!-- 历史记录 -->
+  <div class="history-section" id="historySection"></div>
+
+</div>
+
+<script>
+// ============================================================
+// 菜品数据库
+// ============================================================
+const DISHES = {
+  荤菜: [
+    // === 猪肉 (8) ===
+    { id:"r1", name:"辣椒炒肉", protein:"猪肉", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 前腿肉或五花肉切薄片，瘦肉和肥肉分开。青椒斜切圈，蒜拍碎，豆豉少许。\n2. 锅不放油，中小火下青椒干煸至微焦起虎皮，盛出。\n3. 少许油下肥肉，小火煸出猪油至微卷，下瘦肉炒至变色。\n4. 下蒜和豆豉爆香，加生抽一勺、老抽少许上色。\n5. 倒回青椒翻炒均匀，盐、蚝油调味，翻匀出锅。",
+      notes:"前腿肉最佳，肥瘦分明可分离" },
+    { id:"r2", name:"白辣椒炒肉", protein:"猪肉", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 白辣椒提前用温水泡15分钟切段。瘦肉切片，蒜姜切末。\n2. 油热下瘦肉滑炒变色，加少许生抽盛出。\n3. 余油爆香姜蒜，下白辣椒炒出香味。\n4. 瘦肉倒回，加少许盐和鸡精，大火翻匀出锅。\n5. 白辣椒本身含盐，注意控制盐量。",
+      notes:"白辣椒是湖南特有晒制辣椒，风味独特" },
+    { id:"r3", name:"豆豉蒸排骨", protein:"猪肉", method:"蒸", flavor:"酱香", fattyIssue:false, isOrgan:false,
+      recipe:"1. 排骨斩小块，冷水泡20分钟去血水，沥干。\n2. 加豆豉、蒜末、姜末、生抽、蚝油、少许糖、淀粉和油，抓匀腌制20分钟。\n3. 盘底铺几片姜，排骨平铺不要叠太厚。\n4. 蒸锅水开后放入，大火蒸15-18分钟。\n5. 出锅撒葱花即可。",
+      notes:"排骨选用肋排，全瘦无肥肉问题" },
+    { id:"r4", name:"土豆烧排骨", protein:"猪肉", method:"红烧", flavor:"酱香", fattyIssue:false, isOrgan:false,
+      recipe:"1. 排骨焯水沥干。土豆去皮切滚刀块泡水防氧化。\n2. 油热下冰糖小火炒糖色，冒小泡时下排骨翻炒上色。\n3. 加姜片、八角1个、桂皮1小段、生抽、老抽炒匀。\n4. 加开水没过排骨，大火烧开转中小火炖25分钟。\n5. 下土豆块继续炖15分钟至排骨软烂、土豆入味，大火收汁撒葱花。" },
+    { id:"r5", name:"蒜苗炒瘦肉", protein:"猪肉", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 猪瘦肉切薄片，加少许生抽、料酒、淀粉抓匀腌制10分钟。蒜苗斜切段，红椒切圈。\n2. 油热下肉片滑炒变色盛出。\n3. 余油爆香姜蒜，下蒜苗翻炒至断生。\n4. 倒回肉片，加生抽、少许盐，大火翻匀出锅。",
+      notes:"纯瘦肉，无肥肉困扰" },
+    { id:"r6", name:"青椒炒瘦肉片", protein:"猪肉", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 猪瘦肉切薄片，用生抽、料酒、淀粉抓匀腌10分钟。青椒切块，姜蒜切片。\n2. 热油下肉片滑炒至变色盛出。\n3. 姜蒜爆香，下青椒大火翻炒1分钟。\n4. 倒回肉片，加盐、蚝油、少许清水，翻炒均匀出锅。" },
+    { id:"r7", name:"萝卜干炒腊肉", protein:"猪肉", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 选全瘦或瘦多肥少的腊肉，煮15分钟去咸，切薄片。萝卜干提前泡发切段。蒜苗切段。\n2. 少许油下腊肉片小火煸出油，腊肉微卷盛出。\n3. 锅中底油爆香蒜姜和干辣椒，下萝卜干翻炒。\n4. 腊肉倒回，下蒜苗，加少许生抽提鲜（腊肉自带咸味，几乎不用再加盐）。大火翻匀出锅。",
+      notes:"选瘦腊肉，肥肉部分可以煸出不吃" },
+    { id:"r8", name:"蒜苗炒腊肉", protein:"猪肉", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 腊肉煮15分钟去咸后切薄片（选瘦肉部分），蒜苗斜切段，红椒切圈。\n2. 少许油小火煸腊肉至微卷出油。\n3. 下蒜姜和红椒圈爆香。\n4. 下蒜苗大火翻炒至断生，少许生抽提鲜出锅。" },
+
+    // === 禽类 (7) ===
+    { id:"c1", name:"东安鸡", protein:"禽类", method:"炖煮", flavor:"酸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 嫩鸡（约2斤）处理干净，整只冷水下锅加姜片料酒煮至刚熟（约20分钟），捞出晾凉斩块，鸡汤留用。\n2. 大量姜切细丝，小米辣切圈，红椒切丝。\n3. 热油爆香姜丝，下鸡肉翻炒，加米醋（白醋也可）3汤勺、盐、花椒粉。\n4. 倒入鸡汤没过鸡块，大火烧开转中火煮5分钟入味。\n5. 下辣椒圈和红椒丝再煮2分钟，淋少许香油出锅。\n6. 讲究酸、辣、麻、鲜四味一体，醋要够。",
+      notes:"湖南永州名菜，纯鸡肉无肥肉" },
+    { id:"c2", name:"辣子鸡丁", protein:"禽类", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 鸡胸肉或鸡腿肉去骨切丁，加生抽、料酒、淀粉腌15分钟。干辣椒剪段去籽，花椒少许。\n2. 油六成热下鸡丁滑炸2分钟至表面金黄捞出。\n3. 锅留底油，小火炒香干辣椒和花椒（注意别炒糊）。\n4. 下鸡丁、姜蒜片大火翻炒，加盐、少许糖、生抽，翻匀出锅。" },
+    { id:"c3", name:"香菇蒸滑鸡", protein:"禽类", method:"蒸", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 鸡腿肉去骨切块，干香菇泡发切厚片，木耳撕小朵，红枣几颗。\n2. 鸡肉加姜丝、生抽、蚝油、料酒、淀粉和少许香油抓匀腌20分钟。\n3. 香菇木耳红枣拌入鸡肉，平铺盘中。\n4. 蒸锅水开后放入，大火蒸15分钟。\n5. 出锅撒葱花。滑嫩不腻，老少皆宜。" },
+    { id:"c4", name:"啤酒鸭", protein:"禽类", method:"炖煮", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 鸭子斩块焯水沥干。姜切片、蒜拍碎、干辣椒、八角、桂皮备好。\n2. 热油下鸭块煸炒至表皮微黄出油，下姜蒜香料炒香。\n3. 加生抽、老抽、豆瓣酱翻炒上色。\n4. 倒入一罐啤酒（约500ml）没过鸭块，大火烧开撇浮沫，转中小火炖40分钟。\n5. 加青红椒块大火收汁，汤汁浓稠挂肉即可。" },
+    { id:"c5", name:"酱香板鸭（家常版）", protein:"禽类", method:"红烧", flavor:"酱香", fattyIssue:false, isOrgan:false,
+      recipe:"1. 鸭子半只斩块焯水。备姜片、葱段、八角、桂皮、香叶。\n2. 热油下鸭块煸炒至金黄，下姜片香料、甜面酱1勺半（或黄豆酱）、生抽老抽炒匀。\n3. 加开水没过鸭块，加几颗冰糖，大火烧开转中小火炖40分钟。\n4. 汤汁收至一半时尝味调盐，继续收至浓稠。\n5. 撒葱段出锅，酱香浓郁。" },
+    { id:"c6", name:"青椒炒蛋", protein:"蛋类", method:"小炒", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 鸡蛋3个打散加少许盐和几滴水（这样更嫩）。青椒切碎粒。\n2. 油热先炒青椒粒出香味，加少许盐。\n3. 青椒拨到一边，补点油，倒入蛋液。\n4. 蛋液半凝固时与青椒翻炒混合，蛋熟即可出锅。",
+      notes:"简单快手菜，蛋算荤菜地位" },
+    { id:"c7", name:"番茄炒蛋", protein:"蛋类", method:"小炒", flavor:"酸甜", fattyIssue:false, isOrgan:false,
+      recipe:"1. 鸡蛋3个打散加少许盐。番茄切小块。\n2. 油热下蛋液，炒熟盛出。\n3. 锅补少许油，下番茄块中火炒出汁（可加少许番茄酱提色）。\n4. 加少许糖平衡酸味，倒回鸡蛋翻炒均匀出锅。" },
+
+    // === 牛肉 (4) ===
+    { id:"b1", name:"小炒黄牛肉", protein:"牛肉", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 牛里脊逆纹切薄片，加生抽、料酒、小苏打少许（约1/4茶匙）、淀粉、油抓匀腌20分钟。\n2. 青红椒切圈，小米辣切圈，姜蒜切末，香菜切段。\n3. 油七成热下牛肉大火滑炒，变色立即盛出（全程不超过30秒）。\n4. 姜蒜辣椒爆香，牛肉倒回，加生抽、蚝油、少许老抽、盐，大火翻匀。\n5. 关火后拌入香菜段出锅。",
+      notes:"牛肉逆纹切、加小苏打、大火快炒，三要素保证嫩" },
+    { id:"b2", name:"香菜牛肉", protein:"牛肉", method:"小炒", flavor:"蒜香", fattyIssue:false, isOrgan:false,
+      recipe:"1. 牛肉逆纹切薄片，加生抽、蚝油、淀粉、油腌15分钟。香菜大量切段。\n2. 姜蒜切末，干辣椒段，花椒粒少许。\n3. 油热大火下牛肉滑散，变色即盛出。\n4. 姜蒜干辣椒花椒爆香，牛肉回锅快炒。\n5. 关火后下香菜段翻拌，利用余热让香菜刚断生。" },
+    { id:"b3", name:"萝卜炖牛腩", protein:"牛肉", method:"炖煮", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 牛腩切块焯水去血沫。白萝卜去皮切滚刀块。\n2. 牛腩入砂锅加姜片、八角1个、桂皮1小段、香叶2片、料酒，加足水。\n3. 大火烧开转小火炖1.5小时至牛腩软。\n4. 下白萝卜继续炖30分钟至萝卜透亮。\n5. 加盐和少许白胡椒粉调味，撒香菜。汤清味鲜。" },
+    { id:"b4", name:"剁椒芋头蒸牛肉", protein:"牛肉", method:"蒸", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 牛肉切薄片加生抽、蚝油、淀粉、姜末腌15分钟。芋头去皮切厚片。\n2. 芋头铺盘底，牛肉片铺在芋头上。\n3. 铺一层剁椒在牛肉上。\n4. 蒸锅水开后放入，大火蒸12分钟。\n5. 出锅淋少许热油激香，撒葱花。" },
+
+    // === 牛肚 (1) ===
+    { id:"t1", name:"酸辣牛百叶", protein:"牛肉", method:"小炒", flavor:"酸辣", fattyIssue:false, isOrgan:false, isTripe:true,
+      recipe:"1. 牛百叶（牛肚）切丝，加少许小苏打和盐揉搓后冲洗干净，焯水10秒捞出过凉。\n2. 泡椒切碎，酸豆角切粒，姜蒜切末，小米辣切圈。\n3. 热油爆香姜蒜泡椒，下酸豆角翻炒。\n4. 下牛百叶大火快速翻炒，加生抽、白醋、盐、少许糖。\n5. 全程快炒不超过1分钟，保持牛肚爽脆。撒葱花出锅。",
+      notes:"每周最多出现一次" },
+
+    // === 鱼虾 (5) ===
+    { id:"f1", name:"剁椒鱼头", protein:"鱼类", method:"清蒸", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 胖头鱼（鳙鱼）鱼头一个约2斤，去腮去鳞洗净，从头顶劈开但不要切断，用料酒、姜片、盐抹匀腌15分钟。\n2. 大量剁椒（红绿各半最佳）加蒜末、姜末、少许豆豉和蒸鱼豉油拌匀。\n3. 鱼头摆盘，铺上剁椒料。\n4. 蒸锅水开上汽后放入，大火蒸10-12分钟（时间根据鱼头大小微调）。\n5. 出锅倒掉盘中多余汁水，淋少许蒸鱼豉油，撒葱花，烧一勺热油浇上去激发香味。" },
+    { id:"f2", name:"红烧鲫鱼", protein:"鱼类", method:"红烧", flavor:"酱香", fattyIssue:false, isOrgan:false,
+      recipe:"1. 鲫鱼去鳞去腮去内脏洗净，两面各划三刀，用厨房纸擦干。\n2. 油烧到七八成热，下鱼煎至两面金黄（每面约3分钟，不要频繁翻动）。\n3. 下姜片、蒜瓣、葱段、干辣椒，加生抽老抽料酒。\n4. 加开水至鱼身一半，大火烧开转中火，用勺子反复浇汁在鱼身上。\n5. 烧约8分钟至汤汁浓稠，尝味调盐，撒葱花出锅。" },
+    { id:"f3", name:"紫苏煮鱼", protein:"鱼类", method:"炖煮", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 草鱼或鲫鱼处理干净切块，用盐和料酒腌10分钟。紫苏叶一把切碎，青红椒切圈。\n2. 姜片爆香，鱼块下锅两面略煎。\n3. 加开水没过鱼块，大火煮至汤白（约8分钟）。\n4. 下青红椒圈、紫苏叶，加盐和白胡椒粉调味。\n5. 再煮2分钟即可，汤鲜肉嫩，紫苏提味点睛。" },
+    { id:"f4", name:"剁椒蒸草鱼块", protein:"鱼类", method:"蒸", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 草鱼中段切厚块，用料酒、姜片、少许盐腌10分钟。\n2. 鱼块摆盘，铺上剁椒和姜末。\n3. 蒸锅上汽后放入，大火蒸8-10分钟。\n4. 出锅倒掉多余汁水，淋蒸鱼豉油，撒葱花。\n5. 烧一勺热油泼在剁椒上激发香味。" },
+    { id:"f5", name:"蒜蓉开背虾", protein:"虾", method:"蒸", flavor:"蒜香", fattyIssue:false, isOrgan:false,
+      recipe:"1. 大虾剪去虾须虾脚，从背部开刀去虾线但不要切断，用刀背轻拍展开。\n2. 粉丝温水泡软铺盘底，虾展开摆在粉丝上。\n3. 大量蒜末（一头蒜起）+少许姜末，用热油泼一下激香，加生抽蚝油调成蒜蓉酱。\n4. 蒜蓉酱铺在每只虾上。蒸锅上汽后大火蒸6分钟。\n5. 出锅撒葱花，烧一勺热油浇上。" },
+    { id:"f6", name:"韭菜炒河虾", protein:"虾", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 小河虾洗净沥干。韭菜切段，姜蒜切末，小米辣切圈。\n2. 油热下姜蒜和小米辣爆香。\n3. 下河虾大火翻炒至变色（约2分钟），加少许料酒去腥。\n4. 下韭菜段快速翻炒至刚断生（约30秒）。\n5. 加盐、少许生抽调味出锅。韭菜不能炒老。" },
+
+    // === 综合 (1) ===
+    { id:"m1", name:"农家一碗香", protein:"猪肉", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 猪瘦肉切片加生抽料酒淀粉腌10分钟。鸡蛋2个打散煎成蛋饼切块。青红椒切块。\n2. 油热下肉片滑炒变色，下姜蒜豆豉爆香。\n3. 下青红椒翻炒出香味。\n4. 下煎好的蛋块，加生抽、蚝油、少许老抽、盐。\n5. 大火翻匀出锅。一道菜有肉有蛋，经典下饭菜。" }
+  ],
+
+  素菜: [
+    { id:"v1", name:"手撕包菜", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 包菜用手撕成小片（刀切的风味不同），洗净沥干。干辣椒剪段，蒜切片。\n2. 少许油小火煸五花肉薄片出油（可不放肉做成纯素版）。\n3. 下干辣椒和蒜片爆香。\n4. 下包菜大火爆炒，沿锅边淋少许醋（提脆关键），加盐、生抽。\n5. 全程大火快炒，包菜断生即可，保持脆甜。" },
+    { id:"v2", name:"酸辣土豆丝", method:"小炒", flavor:"酸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 土豆去皮切细丝，清水冲洗3遍洗掉淀粉，泡水里备用。干辣椒剪段，花椒少许。\n2. 油热下干辣椒和花椒小火炒香。\n3. 土豆丝沥干下锅，大火快炒。\n4. 加盐、白醋（关键，不要用陈醋），翻炒均匀约1分钟。\n5. 炒至土豆丝断生但还脆，出锅。全程大火2分钟内完成。" },
+    { id:"v3", name:"蒜蓉空心菜", method:"小炒", flavor:"蒜香", fattyIssue:false, isOrgan:false,
+      recipe:"1. 空心菜摘段洗净沥干。大量蒜切末（5-6瓣），腐乳汁少许可选。\n2. 油热下一半蒜末爆香（剩一半最后用）。\n3. 下空心菜大火快炒，炒软后加盐。\n4. 加腐乳汁和剩下一半生蒜末。\n5. 翻匀立刻出锅。腐乳汁增鲜，生蒜末增香。" },
+    { id:"v4", name:"红烧茄子", method:"红烧", flavor:"酱香", fattyIssue:false, isOrgan:false,
+      recipe:"1. 茄子切滚刀块，撒盐腌10分钟挤掉水分（减少吸油）。\n2. 油热下茄子中火煎至表面金黄变软。\n3. 下蒜末爆香，加生抽、老抽、蚝油、少许糖和清水。\n4. 焖煮3分钟让茄子入味。\n5. 撒葱花出锅。茄子软烂入味，下饭利器。" },
+    { id:"v5", name:"剁椒炒豆角", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 豆角（豇豆）掰段，开水焯1分钟捞出过凉（去生味）。\n2. 蒜切末，剁椒1勺备用。\n3. 油热爆香蒜末和剁椒。\n4. 下豆角大火翻炒，加少许生抽和盐。\n5. 翻炒均匀出锅。豆角一定要炒熟。" },
+    { id:"v6", name:"虎皮青椒", method:"煎", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 青椒（选薄皮的）洗净去蒂，用刀拍扁。\n2. 锅不放油中小火干煸青椒，用铲子按压，两面煸出虎皮焦斑盛出。\n3. 锅中倒少许油，下蒜末和豆豉爆香。\n4. 倒回青椒，加生抽、醋、少许糖和盐。\n5. 翻炒均匀，让酱汁裹在青椒上，出锅。" },
+    { id:"v7", name:"韭菜炒豆芽", method:"小炒", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 绿豆芽洗净沥干，韭菜切段。\n2. 油热爆香蒜末。\n3. 下豆芽大火快炒30秒。\n4. 下韭菜段继续翻炒30秒至断生。\n5. 加盐调味出锅。全程不到2分钟，清爽快手。" },
+    { id:"v8", name:"清炒小白菜", method:"小炒", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 小白菜（上海青/瓢儿白）掰开洗净沥干，蒜切片。\n2. 油热爆香蒜片。\n3. 先下菜帮部分炒30秒，再下叶子部分。\n4. 加盐调味，大火快炒至叶子变软。\n5. 出锅。青菜类全程不超过2分钟。" },
+    { id:"v9", name:"干锅花菜", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 花菜掰成小朵，焯水1分钟捞出沥干。五花肉薄片几片（可不放）。\n2. 少许油煸五花肉出油，下蒜片和干辣椒爆香。\n3. 下花菜中大火煸炒至边缘微焦。\n4. 加生抽、蚝油、盐，淋少许清水帮助入味。\n5. 下青蒜段翻匀出锅。" },
+    { id:"v10", name:"蒜蓉西兰花", method:"小炒", flavor:"蒜香", fattyIssue:false, isOrgan:false,
+      recipe:"1. 西兰花掰小朵，焯水1分钟（水中加少许盐和油保持翠绿）捞出过凉。\n2. 大量蒜切末，分两份。\n3. 油热下一半蒜末爆香，下西兰花翻炒。\n4. 加蚝油、盐、少许水淀粉勾薄芡。\n5. 撒另一半生蒜末，翻匀出锅。" },
+    { id:"v11", name:"擂辣椒皮蛋", method:"凉拌", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 青椒（螺丝椒最佳）洗净，用火烤或干锅煸至表皮焦黑起泡。\n2. 剥掉焦黑的外皮，青椒撕成条。\n3. 皮蛋2个剥壳切瓣。\n4. 擂钵（或大碗）中放入青椒、皮蛋、蒜末、剁椒、生抽、香醋、香油。\n5. 用擀面杖或勺子捣碎混合，不用太碎，保持一些块状口感。\n6. 咸辣鲜香，长沙最具代表性的凉菜。" },
+    { id:"v12", name:"烧辣椒拌茄子", method:"凉拌", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 长茄子整根蒸熟（筷子能轻松穿透），撕成条。\n2. 青椒用火烤或干锅煸至表皮焦黑起泡，剥皮撕成条。\n3. 蒜末、剁椒、生抽、香醋、香油、少许盐调成酱汁。\n4. 茄子和青椒混合，淋酱汁拌匀。\n5. 可冷藏片刻更入味。" },
+    { id:"v13", name:"麻婆豆腐", method:"红烧", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 嫩豆腐切2cm方块，淡盐水中泡5分钟（定型不易碎）。\n2. 猪肉末少许加料酒生抽炒散盛出。\n3. 油热下郫县豆瓣酱小火炒出红油，下姜蒜末和少许豆豉。\n4. 加清水、生抽、少许糖，轻轻放入豆腐块，大火烧开转中小火煮5分钟。\n5. 分两次淋入水淀粉勾芡，让汤汁逐层挂在豆腐上。\n6. 出锅撒花椒粉和葱花。" },
+    { id:"v14", name:"家常豆腐", method:"红烧", flavor:"酱香", fattyIssue:false, isOrgan:false,
+      recipe:"1. 老豆腐切三角厚片，擦干水分。油热煎至两面金黄盛出。\n2. 少许肉末炒散，下姜蒜末、剁椒或豆瓣酱炒香。\n3. 加清水、生抽、老抽、蚝油搅拌。\n4. 放入煎好的豆腐，中火焖3分钟让豆腐吸汁。\n5. 下青红椒片、木耳翻炒，水淀粉勾芡出锅。" },
+    { id:"v15", name:"芹菜炒香干", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 香干切条，芹菜去叶斜切段，红椒切丝。\n2. 香干可以先用开水烫一下去豆腥。\n3. 油热下姜蒜小米辣爆香，下香干煸炒至微微焦黄。\n4. 下芹菜和红椒丝大火快炒。\n5. 加生抽、盐调味，翻炒均匀出锅。" },
+    { id:"v16", name:"剁椒炒藕片", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 莲藕去皮切薄片，清水冲洗后焯水30秒。\n2. 蒜切末，剁椒1勺。\n3. 油热爆香蒜末和剁椒。\n4. 下藕片大火翻炒，加少许盐和生抽。\n5. 翻炒2分钟出锅。藕片保持脆爽。" },
+    { id:"v17", name:"蒜苔炒肉末", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 蒜苔切小粒。瘦肉末加生抽料酒抓匀。\n2. 油热下肉末炒散至变色盛出。\n3. 姜蒜末小米辣爆香，下蒜苔粒翻炒。\n4. 蒜苔变色后倒回肉末。\n5. 加生抽、蚝油、少许盐，翻匀出锅。拌饭一绝。" },
+    { id:"v18", name:"干煸四季豆", method:"小炒", flavor:"咸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 四季豆去筋掰段，沥干水分（一定要沥干防溅油）。\n2. 多些油，中火炸四季豆至表皮起皱微焦捞出。\n3. 锅留底油，下肉末炒散，加干辣椒花椒蒜末爆香。\n4. 四季豆倒回，加生抽、盐翻炒均匀。\n5. 出锅。四季豆一定要炸/炒熟透（生四季豆有毒）。" },
+    { id:"v19", name:"素炒冬瓜", method:"小炒", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 冬瓜去皮去瓤切片不要太薄（保持口感）。\n2. 油热下姜丝蒜片爆香。\n3. 下冬瓜片中火翻炒，加少许生抽。\n4. 炒至冬瓜边缘变透明，加盐。\n5. 加少许清水焖1分钟入味，出锅撒葱花。" },
+    { id:"v20", name:"清炒上海青", method:"小炒", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 上海青掰开洗净，蒜切片。\n2. 油热爆香蒜片。\n3. 先下菜帮部分炒1分钟。\n4. 下叶子部分翻炒至软。\n5. 加盐、蚝油调味出锅。" }
+  ],
+
+  汤: [
+    { id:"s1", name:"冬瓜排骨汤", method:"炖煮", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 排骨焯水洗净。冬瓜去皮切厚块。\n2. 排骨入锅加水、姜片、料酒，大火烧开转小火炖40分钟。\n3. 下冬瓜块继续炖15分钟至透明。\n4. 加盐和少许白胡椒粉调味。\n5. 撒葱花。清淡鲜美，冬瓜利水消暑。" },
+    { id:"s2", name:"玉米排骨汤", method:"炖煮", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 排骨焯水洗净。甜玉米切段，胡萝卜去皮切滚刀块。\n2. 排骨和玉米入锅加水、姜片，大火烧开转小火炖40分钟。\n3. 下胡萝卜继续炖20分钟。\n4. 加盐调味即可，汤自带玉米清甜。\n5. 不需过多调味，食材本味。" },
+    { id:"s3", name:"紫菜蛋花汤", method:"炖煮", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 紫菜撕碎放碗底，加少许虾皮和葱花。\n2. 锅中水烧开，加盐、少许生抽和香油。\n3. 鸡蛋打散，在水大开时沿筷子缓缓倒入搅出蛋花。\n4. 关火，热汤冲入放紫菜的碗中。\n5. 最简单但最家常的快手汤。" },
+    { id:"s4", name:"番茄蛋汤", method:"炖煮", flavor:"酸甜", fattyIssue:false, isOrgan:false,
+      recipe:"1. 番茄切小块。鸡蛋打散。\n2. 少许油炒番茄出汁，加盐帮助出汁。\n3. 加开水，大火煮2分钟出番茄味。\n4. 蛋液沿筷子缓缓倒入搅成蛋花。\n5. 加盐、少许糖、香油、葱花出锅。" },
+    { id:"s5", name:"酸菜豆腐汤", method:"炖煮", flavor:"酸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 酸菜（泡青菜）切丝，嫩豆腐切块。姜丝、小米辣切圈。\n2. 少许油炒香姜丝小米辣，下酸菜翻炒出酸味。\n3. 加开水大火煮3分钟。\n4. 轻轻放入豆腐块煮2分钟。\n5. 加盐、白胡椒粉调味，出锅撒葱花。" },
+    { id:"s6", name:"萝卜排骨汤", method:"炖煮", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 排骨焯水洗净。白萝卜去皮切滚刀块。\n2. 排骨入锅加水、姜片、料酒，大火烧开转小火炖40分钟。\n3. 下白萝卜继续炖20分钟至萝卜透亮。\n4. 加盐和少许白胡椒粉。\n5. 撒葱花和香菜末。" },
+    { id:"s7", name:"海带排骨汤", method:"炖煮", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 排骨焯水。干海带提前泡发切块或海带结。\n2. 排骨和姜片入锅加水炖30分钟。\n3. 下海带继续炖20分钟至软烂。\n4. 加盐调味即可。\n5. 海带自带鲜味，不需要太多调料。" },
+    { id:"s8", name:"菌菇肉片汤", method:"炖煮", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 瘦肉切薄片加生抽料酒淀粉腌10分钟。各种菌菇（杏鲍菇、金针菇、平菇等）洗净处理好。\n2. 水烧开下菌菇煮3分钟出鲜味。\n3. 转中火下肉片滑散，变色立即关火（保持嫩滑）。\n4. 加盐、白胡椒粉、香油。\n5. 撒葱花出锅。" },
+    { id:"s9", name:"丝瓜蛋汤", method:"炖煮", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 丝瓜去皮切滚刀块。鸡蛋打散。\n2. 少许油炒丝瓜至变软出汁。\n3. 加开水大火煮2分钟。\n4. 蛋液沿筷子倒入搅成蛋花。\n5. 加盐、少许白胡椒粉和香油出锅。" },
+    { id:"s10", name:"木耳瘦肉汤", method:"炖煮", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 干木耳提前泡发撕小朵。瘦肉切薄片腌10分钟。\n2. 水烧开下木耳煮3分钟。\n3. 下姜丝，转中火下肉片滑散。\n4. 肉片变色即可关火，加盐调味。\n5. 撒葱花和少许香油。" },
+    { id:"s11", name:"豆苗皮蛋汤", method:"炖煮", flavor:"清淡", fattyIssue:false, isOrgan:false,
+      recipe:"1. 皮蛋2个剥壳切瓣。豆苗洗净。\n2. 少许油煸一下皮蛋（表面微焦更香）。\n3. 加开水大火煮出白汤（约3分钟）。\n4. 下豆苗烫至刚断生（约30秒），加盐。\n5. 少许白胡椒粉，出锅。" },
+    { id:"s12", name:"酸辣汤", method:"炖煮", flavor:"酸辣", fattyIssue:false, isOrgan:false,
+      recipe:"1. 备料：肉丝少许、木耳丝、笋丝（或金针菇）、豆腐丝、鸡蛋1个打散。\n2. 水烧开下肉丝和木耳笋丝煮2分钟。\n3. 加生抽、大量白胡椒粉、盐、大量香醋。\n4. 淋蛋花，水淀粉勾薄芡。\n5. 淋香油和辣椒油，撒葱花和香菜。酸辣开胃。" }
+  ]
+};
+
+// ============================================================
+// 抽取算法
+// ============================================================
+
+// 获取最近N天的记录
+function getHistory(days = 7) {
+  try {
+    const raw = localStorage.getItem('meal_history');
+    return raw ? JSON.parse(raw) : {};
+  } catch(e) { return {}; }
+}
+
+function saveHistory(history) {
+  // 只保留最近7天
+  const dates = Object.keys(history).sort();
+  while (dates.length > 7) {
+    delete history[dates.shift()];
+  }
+  localStorage.setItem('meal_history', JSON.stringify(history));
+}
+
+// 获取今天已抽取的菜品（用于午餐/晚餐间互斥）
+function getTodayDishIds() {
+  const today = new Date().toISOString().slice(0, 10);
+  const history = getHistory();
+  const todayData = history[today] || { lunch: [], dinner: [] };
+  return new Set([...todayData.lunch, ...todayData.dinner]);
+}
+
+// 获取最近N天出现过的菜品ID
+function getRecentDishIds(days = 3) {
+  const history = getHistory();
+  const now = new Date();
+  const ids = new Set();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const day = history[key];
+    if (day) {
+      (day.lunch || []).forEach(id => ids.add(id));
+      (day.dinner || []).forEach(id => ids.add(id));
+    }
+  }
+  return ids;
+}
+
+// 检查今天是否已出现牛肚
+function tripeUsedToday() {
+  const today = new Date().toISOString().slice(0, 10);
+  const history = getHistory();
+  const todayData = history[today] || { lunch: [], dinner: [] };
+  const allIds = [...todayData.lunch, ...todayData.dinner];
+  return allIds.some(id => {
+    const d = findDishById(id);
+    return d && d.isTripe;
+  });
+}
+
+function findDishById(id) {
+  for (const cat of ['荤菜','素菜','汤']) {
+    const found = DISHES[cat].find(d => d.id === id);
+    if (found) return found;
+  }
+  return null;
+}
+
+// 核心抽取函数
+function selectMeal(excludeIds = new Set(), allowTripe = true) {
+  // 排除肥瘦相连、内脏（非牛肚）
+  let meats = DISHES['荤菜'].filter(d => !d.fattyIssue && !d.isOrgan);
+  let veggies = [...DISHES['素菜']];
+  let soups = [...DISHES['汤']];
+
+  // 牛肚控制
+  if (!allowTripe) {
+    meats = meats.filter(d => !d.isTripe);
+  }
+
+  // 排除今天已出现的ID
+  meats = meats.filter(d => !excludeIds.has(d.id));
+  veggies = veggies.filter(d => !excludeIds.has(d.id));
+  soups = soups.filter(d => !excludeIds.has(d.id));
+
+  // 获取最近3天出现过的ID（降低优先级但不完全排除）
+  const recentIds = getRecentDishIds(3);
+
+  // 如果可用菜品不够，放宽历史限制
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function pickWithBias(pool, count) {
+    const fresh = pool.filter(d => !recentIds.has(d.id));
+    const stale = pool.filter(d => recentIds.has(d.id));
+
+    // 各自随机打乱，fresh 排前面优先尝试
+    shuffle(fresh);
+    shuffle(stale);
+    const candidates = [...fresh, ...stale];
+
+    const picked = [];
+    for (const d of candidates) {
+      if (picked.length >= count) break;
+      if (picked.find(p => p.id === d.id)) continue;
+      // 口味约束：同餐最多2道同口味
+      const sameFlavor = picked.filter(p => p.flavor === d.flavor).length;
+      if (sameFlavor >= 2) continue;
+      // 蛋白质约束：荤菜不重复蛋白质
+      if (d.protein && picked.filter(p => p.protein === d.protein).length >= 1) continue;
+      picked.push(d);
+    }
+    return picked;
+  }
+
+  // 抽1荤 + 2素 + 1汤
+  const pickedMeats = pickWithBias(meats, 1);
+  const pickedVeggies = pickWithBias(veggies, 2);
+  const pickedSoups = pickWithBias(soups, 1);
+
+  // 如果某类不够，降级再试
+  if (pickedMeats.length < 1 || pickedVeggies.length < 2 || pickedSoups.length < 1) {
+    // 放宽所有约束重试
+    return fallbackSelect(meats, veggies, soups);
+  }
+
+  return {
+    meat: pickedMeats[0],
+    veggies: pickedVeggies,
+    soup: pickedSoups[0],
+    allIds: [pickedMeats[0].id, ...pickedVeggies.map(d => d.id), pickedSoups[0].id]
+  };
+}
+
+function fallbackSelect(meats, veggies, soups) {
+  const m = shuffle([...meats])[0];
+  const v = shuffle([...veggies]).slice(0, 2);
+  const s = shuffle([...soups])[0];
+
+  if (!m || v.length < 2 || !s) return null;
+
+  return {
+    meat: m,
+    veggies: v,
+    soup: s,
+    allIds: [m.id, ...v.map(d => d.id), s.id]
+  };
+}
+
+// ============================================================
+// UI 逻辑
+// ============================================================
+
+function drawMeal(type) {
+  const excludeIds = getTodayDishIds();
+  const allowTripe = !tripeUsedToday();
+
+  const meal = selectMeal(excludeIds, allowTripe);
+  if (!meal) {
+    alert('抽取失败，请稍后再试。');
+    return;
+  }
+
+  // 保存到今日记录
+  const today = new Date().toISOString().slice(0, 10);
+  const history = getHistory();
+  if (!history[today]) history[today] = { lunch: [], dinner: [] };
+  history[today][type] = meal.allIds;
+  saveHistory(history);
+
+  // 渲染
+  renderMeal(type, meal);
+  renderHistory();
+  renderWarning();
+}
+
+function renderMeal(type, meal) {
+  const card = document.getElementById(type + 'Card');
+  const empty = document.getElementById(type + 'Empty');
+  if (empty) empty.style.display = 'none';
+
+  const dishIcon = cat => cat === '荤菜' ? '📌' : cat === '素菜' ? '🌿' : '🍲';
+
+  const dishRow = (d, cat) => `
+    <div class="dish-row">
+      <span class="dish-icon">${dishIcon(cat)}</span>
+      <div class="dish-info">
+        <div class="dish-name">${d.name}</div>
+        <div class="dish-tags">
+          ${d.protein ? `<span class="tag protein">${d.protein}</span>` : ''}
+          <span class="tag">${d.flavor}</span>
+          <span class="tag method">${d.method}</span>
+          ${d.isTripe ? '<span class="tag" style="background:#ffe0e0;color:#c0392b;">限量</span>' : ''}
+        </div>
+      </div>
+    </div>
+    <div class="recipe-body">
+      <div class="recipe-label">📝 做法：</div>
+      <div class="recipe-steps">${d.recipe}</div>
+    </div>`;
+
+  const allDishes = [meal.meat, ...meal.veggies, meal.soup];
+  const allCats = ['荤菜', '素菜', '素菜', '汤'];
+
+  card.innerHTML = allDishes.map((d, i) => dishRow(d, allCats[i])).join('');
+
+  // 绑定做法展开
+  card.querySelectorAll('.dish-row').forEach(row => {
+    row.addEventListener('click', function(e) {
+      const recipe = this.nextElementSibling;
+      if (recipe && recipe.classList.contains('recipe-body')) {
+        recipe.classList.toggle('open');
+      }
+    });
+  });
+}
+
+function loadLastView() {
+  const today = new Date().toISOString().slice(0, 10);
+  const history = getHistory();
+  const todayData = history[today];
+
+  if (todayData && todayData.lunch.length > 0) {
+    const meal = mealFromIds(todayData.lunch);
+    if (meal) renderMeal('lunch', meal);
+  }
+  if (todayData && todayData.dinner.length > 0) {
+    const meal = mealFromIds(todayData.dinner);
+    if (meal) renderMeal('dinner', meal);
+  }
+  renderHistory();
+}
+
+function mealFromIds(ids) {
+  const dishes = ids.map(id => findDishById(id)).filter(Boolean);
+  if (dishes.length < 4) return null;
+  const meat = dishes.find(d => DISHES['荤菜'].some(x => x.id === d.id));
+  const veggies = dishes.filter(d => DISHES['素菜'].some(x => x.id === d.id));
+  const soup = dishes.find(d => DISHES['汤'].some(x => x.id === d.id));
+  if (!meat || veggies.length < 2 || !soup) return null;
+  return { meat, veggies: veggies.slice(0, 2), soup, allIds: ids };
+}
+
+function renderHistory() {
+  const section = document.getElementById('historySection');
+  const history = getHistory();
+  const dates = Object.keys(history).sort().reverse();
+
+  if (dates.length === 0) {
+    section.innerHTML = '';
+    return;
+  }
+
+  const weekdays = ['日','一','二','三','四','五','六'];
+  let html = '<div class="history-title">📅 最近记录</div><div class="history-list">';
+
+  for (const date of dates.slice(0, 7)) {
+    const d = new Date(date + 'T00:00:00');
+    const label = `${date} 周${weekdays[d.getDay()]}`;
+    const day = history[date];
+    const lunchNames = (day.lunch || []).map(id => {
+      const dish = findDishById(id);
+      return dish ? dish.name : '?';
+    }).join('、');
+    const dinnerNames = (day.dinner || []).map(id => {
+      const dish = findDishById(id);
+      return dish ? dish.name : '?';
+    }).join('、');
+
+    html += `<div class="history-day">`;
+    html += `<span class="history-date">${label}</span>`;
+    if (lunchNames) html += `<br>　🥢 ${lunchNames}`;
+    if (dinnerNames) html += `<br>　🌙 ${dinnerNames}`;
+    html += `</div>`;
+  }
+
+  html += '</div>';
+  section.innerHTML = html;
+}
+
+function copyMenu() {
+  const today = new Date().toISOString().slice(0, 10);
+  const history = getHistory();
+  const todayData = history[today];
+
+  if (!todayData || (todayData.lunch.length === 0 && todayData.dinner.length === 0)) {
+    alert('请先抽取今天的菜单！');
+    return;
+  }
+
+  const todayLabel = `${today} (周${['日','一','二','三','四','五','六'][new Date().getDay()]})`;
+  let text = `📋 ${todayLabel} 菜单\n`;
+  text += `━━━━━━━━━━━━━━\n`;
+
+  if (todayData.lunch.length > 0) {
+    text += `🥢 午餐：\n`;
+    todayData.lunch.forEach(id => {
+      const d = findDishById(id);
+      if (d) text += `  · ${d.name}\n`;
+    });
+  }
+
+  if (todayData.dinner.length > 0) {
+    text += `🌙 晚餐：\n`;
+    todayData.dinner.forEach(id => {
+      const d = findDishById(id);
+      if (d) text += `  · ${d.name}\n`;
+    });
+  }
+
+  text += `━━━━━━━━━━━━━━\n📝 详细做法请查看网页`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.btn-copy');
+    const orig = btn.textContent;
+    btn.textContent = '✅ 已复制！可以粘贴到微信群里';
+    btn.style.background = '#4caf50';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.background = '#2e7d32';
+    }, 2000);
+  }).catch(() => {
+    alert('复制失败，请手动选中菜单文字复制。');
+  });
+}
+
+// ============================================================
+// 避雷提示
+// ============================================================
+function renderWarning() {
+  const box = document.getElementById('warningBox');
+  const today = new Date().toISOString().slice(0, 10);
+  const history = getHistory();
+  const todayData = history[today];
+  const hasTripe = (todayData && [...(todayData.lunch||[]), ...(todayData.dinner||[])]
+    .some(id => { const d = findDishById(id); return d && d.isTripe; }));
+
+  let tips = [];
+  tips.push('⚠️ 自动排除：红烧肉、回锅肉、五花肉、腊味合蒸等肥瘦相连的菜');
+  tips.push('⚠️ 自动排除：猪肝、肥肠、鸡杂等内脏类菜品');
+
+  if (hasTripe) {
+    tips.push('✅ 今日已出现过牛百叶，后续抽取将不再出现');
+  } else {
+    tips.push('💡 牛百叶每周最多出现一次，被抽到了是缘分');
+  }
+
+  box.innerHTML = tips.join('<br>');
+}
+
+// ============================================================
+// 初始化
+// ============================================================
+loadLastView();
+renderWarning();
+</script>
+
+</body>
+</html>
